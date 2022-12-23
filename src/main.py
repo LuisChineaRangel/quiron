@@ -2,7 +2,7 @@ import cv2
 import mediapipe as mp
 
 mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.mp_drawing_styles
+mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
 capture = cv2.VideoCapture(0)
@@ -52,11 +52,34 @@ with mp_hands.Hands(model_complexity = 0, min_detection_confidence = 0.5, min_tr
       # ----------------
       # list of finger tips locators, 4 is thumb, 20 is pinky finger
       tipIds = [4, 8, 12, 16, 20]
+      
       landmark = hand_landmarks.landmark
 
       # x,y coordinates of pinky tip. Coordinates are normalized to [0.0,1.0] with width and height of the frame
-      landmark[tipIds[4]].x
-      landmark[tipIds[4]].y
+      # x = landmark[tipIds[4]].x
+      # y = landmark[tipIds[4]].y
+
+      # Checking Thumb
+      if label == "Left" and landmark[tipIds[0]].x > landmark[3].x:
+        finger_count += 1
+      if label == "Right" and landmark[tipIds[0]].x < landmark[3].x:
+        finger_count += 1
+
+      # Checking Index
+      if landmark[tipIds[1]].y < landmark[6].y:
+        finger_count += 1
+
+      # Checking Index
+      if landmark[tipIds[2]].y < landmark[10].y:
+        finger_count += 1
+
+      # Checking Index
+      if landmark[tipIds[3]].y < landmark[14].y:
+        finger_count += 1
+
+      # Checking Index
+      if landmark[tipIds[4]].y < landmark[18].y:
+        finger_count += 1
 
       # OpenCV function to draw a circle:
       # cv2.circle(frame, center_coordinates, radius in pixels, color (Blue 0-255, Green 0-255, Red 0-255), thickness in pixels (-1 solid))
@@ -71,6 +94,9 @@ with mp_hands.Hands(model_complexity = 0, min_detection_confidence = 0.5, min_tr
       # See other OpenCV functions to draw a line or a rectangle:
       # cv2.line(frame, start_point, end_point, color, thickness)
       # cv2.rectangle(frame, start_point (top-left), end_point (bottom-right), color, thickness)
+
+      # Display finger count
+      cv2.putText(frame, str(finger_count), (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 3, (255, 0, 0), 10)
 
     cv2.imshow('MediaPipe Hands', frame)
     if cv2.waitKey(5) & 0xFF == 27:
