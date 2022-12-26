@@ -31,6 +31,8 @@ with mp_hands.Hands(model_complexity = 0, min_detection_confidence = 0.5, min_tr
     # height, width and depth (RGB=3) of frame
     (height, width, depth) = frame.shape
 
+    cv2.rectangle(frame, (45, 400), (135, 460), (255, 255, 255), -1)
+    
     # Count of raised fingers
     finger_count = 0
 
@@ -97,7 +99,6 @@ with mp_hands.Hands(model_complexity = 0, min_detection_confidence = 0.5, min_tr
         # cv2.rectangle(frame, start_point (top-left), end_point (bottom-right), color, thickness)
 
       # Display finger count
-      cv2.rectangle(frame, (45, 400), (135, 460), (255, 255, 255), -1)
       cv2.putText(frame, str(finger_count).zfill(2), (50, 450), cv2.FONT_HERSHEY_COMPLEX, 2, (255, 0, 0), 10)
 
     title = 'Handy Hands'
