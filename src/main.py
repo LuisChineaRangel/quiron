@@ -2,12 +2,182 @@ import cv2
 import numpy as np
 import mediapipe as mp
 
+# Title of the Window with the Hand Recognition
+TITLE = 'Handy Hands'
+
+# Margin of Error used in checking if two fingers are touching each other
+MARGIN_OF_ERROR = 0.05
+
+# Colors used
+RED = (0, 0, 255)
+BLUE = (255, 0, 0)
+WHITE = (255, 255, 255)
+
+# Fonts used
+FONT = cv2.FONT_HERSHEY_COMPLEX
+
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
+# list of finger tips locators, 4 is thumb, 20 is pinky finger
+TIPIDS = [4, 8, 12, 16, 20]
+
+# Checks if finger is up or not
+def isFingerUp(landmark, label, tip):
+  # Vertical Aligned Hand Case
+  if not isHandSideways(landmark, label):
+    # In thumb case, it must be checked if hand is backward or forward
+    if tip == TIPIDS[0]:
+      if landmark[tip].x < landmark[TIPIDS[4]].x:
+        if (label == "Left" and landmark[tip].x < landmark[tip - 1].x) or (label == "Right" and landmark[tip].x < landmark[tip - 1].x):
+          return True
+      if landmark[tip].x > landmark[TIPIDS[4]].x:
+        if (label == "Right" and landmark[tip].x > landmark[tip - 1].x) or (label == "Left" and landmark[tip].x > landmark[tip - 1].x):
+          return True
+      return False
+    # For rest of fingers, make the comparison between tip and pip
+    return landmark[tip].y < landmark[tip - 2].y
+  # Horizontal Aligned Hand Case
+  else:
+    # In thumb case, it must be checked if hand is backward or forward
+    if tip == TIPIDS[0]:
+      thumb_cmc = landmark[TIPIDS[0]]
+      pinky_mcp = landmark[17]
+      if thumb_cmc.y < pinky_mcp.y:
+        return landmark[tip].y < landmark[tip - 1].y
+      return landmark[tip].y > landmark[tip - 1].y
+    # For rest of fingers, make the comparison between tip and pip
+    return (label == "Left" and landmark[tip].x > landmark[tip - 2].x) or (label == "Right" and landmark[tip].x < landmark[tip - 2].x)
+  return False
+
+# Check if hand is sideways (Horizontal Aligned)
+def isHandSideways(landmark, label):
+  wrist = landmark[0]
+  thumb_cmc = landmark[1]
+  pinky_mcp = landmark[17]
+  if thumb_cmc.y > wrist.y or thumb_cmc.y < pinky_mcp.y:
+    return True
+  return False
+
+# Counts fingers up in a hand
+def countFingers(landmark, label):
+  count = 0
+  for i in range(5):
+    if isFingerUp(landmark, label, TIPIDS[i]):
+      count += 1
+  return count
+
+# Detect a Thumbs Up Gesture
+def detectThumbUp(landmark, label):
+  if isHandSideways(landmark, label):
+    if not isFingerUp(landmark, label, TIPIDS[0]) or (landmark[TIPIDS[0]].y > landmark[TIPIDS[0] - 1].y):
+      return False
+    for i in range(1, 5):
+      if isFingerUp(landmark, label, TIPIDS[i]):
+        return False
+  else:
+    return False
+  return True
+
+# Detect a Thumbs Down Gesture
+def detectThumbDown(landmark, label):
+  if isHandSideways(landmark, label):
+    if not isFingerUp(landmark, label, TIPIDS[0]) or (landmark[TIPIDS[0]].y < landmark[TIPIDS[0] - 1].y):
+      return False
+    for i in range(1, 5):
+      if isFingerUp(landmark, label, TIPIDS[i]):
+        return False
+  else:
+    return False
+  return True
+
+# Detect a Peace Sign Gesture
+def detectPeaceSign(landmark, label):
+  if not isHandSideways(landmark, label):
+    if not isFingerUp(landmark, label, TIPIDS[1]) or not isFingerUp(landmark, label, TIPIDS[2]):
+      return False
+    for i in range(5):
+      if i == 1 or i == 2:
+        continue
+      if isFingerUp(landmark, label, TIPIDS[i]):
+        return False
+  else:
+    return False
+  return True
+
+# Detect a Rock N Roll Sign Gesture
+def detectRockNRollSign(landmark, label):
+  if not isHandSideways(landmark, label):
+    if not isFingerUp(landmark, label, TIPIDS[0]) or not isFingerUp(landmark, label, TIPIDS[1]) or not isFingerUp(landmark, label, TIPIDS[4]):
+      return False
+    for i in range(2, 4):
+      if isFingerUp(landmark, label, TIPIDS[i]):
+        return False
+  else:
+    return False
+  return True
+
+# Detect a Surf Sign Gesture
+def detectSurfSign(landmark, label):
+  if isHandSideways(landmark, label):
+    if not isFingerUp(landmark, label, TIPIDS[0]) or not isFingerUp(landmark, label, TIPIDS[4]) or (landmark[TIPIDS[0]].y > landmark[TIPIDS[0] - 1].y):
+      return False
+    for i in range(1, 4):
+      if isFingerUp(landmark, label, TIPIDS[i]):
+        return False
+  else:
+    return False
+  return True
+
+# Detect a Ok Sign Gesture
+def detectOkSign(landmark, label):
+  if not isHandSideways(landmark, label):
+    for i in range(2, 5):
+      if not isFingerUp(landmark, label, TIPIDS[i]):
+        return False
+    distance = np.sqrt((landmark[TIPIDS[1]].x - landmark[TIPIDS[0]].x)
+                       ** 2 + (landmark[TIPIDS[1]].y - landmark[TIPIDS[0]].y)**2)
+    if distance > MARGIN_OF_ERROR:
+      return False
+  else:
+    return False
+  return True
+
+# Detect a Loser Sign (L) Gesture
+def detectLoserSign(landmark, label):
+  if not isHandSideways(landmark, label):
+    if not isFingerUp(landmark, label, TIPIDS[0]) or not isFingerUp(landmark, label, TIPIDS[1]):
+      return False
+    for i in range(2, 5):
+      if isFingerUp(landmark, label, TIPIDS[i]):
+        return False
+  else:
+    return False
+  return True
+
+# Detects gestures in a hand
+def detectGestures(landmark, label):
+  if detectThumbUp(landmark, label):
+    return "Thumbs Up! :D"
+  if detectThumbDown(landmark, label):
+    return "Thumbs Down... :("
+  if detectPeaceSign(landmark, label):
+    return "Peace!"
+  if detectRockNRollSign(landmark, label):
+    return "Rock'n'Roll!"
+  if detectSurfSign(landmark, label):
+    return "Surf's up!"
+  if detectOkSign(landmark, label):
+    return "Everything is OK"
+  if detectLoserSign(landmark, label):
+    return "Loser >:D"
+  return False
+
+
+# Starts the WebCam Capture
 capture = cv2.VideoCapture(0)
-with mp_hands.Hands(model_complexity = 0, min_detection_confidence = 0.5, min_tracking_confidence = 0.5) as hands:
+with mp_hands.Hands(model_complexity=0, min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
   while capture.isOpened():
     success, frame = capture.read()
     if not success:
@@ -31,11 +201,10 @@ with mp_hands.Hands(model_complexity = 0, min_detection_confidence = 0.5, min_tr
     # height, width and depth (RGB=3) of frame
     (height, width, depth) = frame.shape
 
-    cv2.rectangle(frame, (45, 400), (135, 460), (255, 255, 255), -1)
-    
-    # Count of raised fingers
+    # finger_count of raised fingers
     finger_count = 0
 
+    # If hands are detected
     if results.multi_hand_landmarks:
       for hand_landmarks in results.multi_hand_landmarks:
         # Index Position and Handedness (left hand or rigth hand)
@@ -44,65 +213,33 @@ with mp_hands.Hands(model_complexity = 0, min_detection_confidence = 0.5, min_tr
 
         # Drawing within frame of the hand landmark with its connections and mediapipe default style
         mp_drawing.draw_landmarks(
-          frame,
-          hand_landmarks,
-          mp_hands.HAND_CONNECTIONS,
-          mp_drawing_styles.get_default_hand_landmarks_style(),
-          mp_drawing_styles.get_default_hand_connections_style())
+            frame,
+            hand_landmarks,
+            mp_hands.HAND_CONNECTIONS,
+            mp_drawing_styles.get_default_hand_landmarks_style(),
+            mp_drawing_styles.get_default_hand_connections_style())
 
-        # ----------------
         # Detect fingers
-        # ----------------
-        # list of finger tips locators, 4 is thumb, 20 is pinky finger
-        tipIds = [4, 8, 12, 16, 20]
-        
         landmark = hand_landmarks.landmark
+        finger_count += countFingers(landmark, label)
 
-        # x,y coordinates of pinky tip. Coordinates are normalized to [0.0,1.0] with width and height of the frame
-        # x = landmark[tipIds[4]].x
-        # y = landmark[tipIds[4]].y
+        # Detect Gestures
+        if detectGestures(landmark, label):
+          cv2.rectangle(frame, (int(0.2 * width), int(0.825 * height)),
+                        (int(0.975 * width), int(0.975 * height)), WHITE, -1)
+          cv2.putText(frame, detectGestures(landmark, label), (int(0.225 * width), int(0.925 * height)),
+                      FONT, 1.5, BLUE, 5)
 
-        # Checking Thumb
-        if label == "Left" and landmark[tipIds[0]].x > landmark[3].x:
-          finger_count += 1
-        if label == "Right" and landmark[tipIds[0]].x < landmark[3].x:
-          finger_count += 1
+      # Display fingers counted
+      text = str(finger_count).zfill(2)
+      cv2.rectangle(frame, (int(0.025 * width), int(0.825 * height)),
+                    (int(0.175 * width), int(0.975 * height)), WHITE, -1)
+      cv2.putText(frame, text, (int(0.04 * width), int(0.95 * height)),
+                  FONT, 2, RED, 10)
+    # Show Frame
+    cv2.imshow(TITLE, frame)
 
-        # Checking Index
-        if landmark[tipIds[1]].y < landmark[6].y:
-          finger_count += 1
-
-        # Checking Index
-        if landmark[tipIds[2]].y < landmark[10].y:
-          finger_count += 1
-
-        # Checking Index
-        if landmark[tipIds[3]].y < landmark[14].y:
-          finger_count += 1
-
-        # Checking Index
-        if landmark[tipIds[4]].y < landmark[18].y:
-          finger_count += 1
-
-        # OpenCV function to draw a circle:
-        # cv2.circle(frame, center_coordinates, radius in pixels, color (Blue 0-255, Green 0-255, Red 0-255), thickness in pixels (-1 solid))
-        # Example: draw a red solid circle of 10 pixel radius in the tip of pinky finger:
-        # cv2.circle(frame, (int(landmark[tipIds[4]].x * width),int(landmark[tipIds[4]].y * height)), 10, (0,0,255), -1)
-
-        # OpenCV function to draw text on frame
-        # cv2.putText(frame, text, org, font, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]])
-        # Example: draw a blue "hello" on the upper left corner of the frame
-        # cv2.putText(frame, "hello", (20,60),cv2.FONT_HERSHEY_SIMPLEX,2,(255,0,0), thickness = 5)
-
-        # See other OpenCV functions to draw a line or a rectangle:
-        # cv2.line(frame, start_point, end_point, color, thickness)
-        # cv2.rectangle(frame, start_point (top-left), end_point (bottom-right), color, thickness)
-
-      # Display finger count
-      cv2.putText(frame, str(finger_count).zfill(2), (50, 450), cv2.FONT_HERSHEY_COMPLEX, 2, (255, 0, 0), 10)
-
-    title = 'Handy Hands'
-    cv2.imshow(title, frame)
+    # Until Esc Key is pressed
     if cv2.waitKey(5) & 0xFF == 27:
       break
 capture.release()
