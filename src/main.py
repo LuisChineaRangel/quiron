@@ -8,7 +8,14 @@ TITLE = 'Handy Hands'
 # Margin of Error used in checking if two fingers are touching each other
 MARGIN_OF_ERROR = 0.05
 
+# Margin of Hand movement
+MOVEMENT_MARGIN = 0.025
+
+# Flags to detect Hand movement
+moving = prev_thumb_pos = prev_index_pos = prev_middle_pos = prev_ring_pos = prev_pinky_pos = False
+
 # Colors used
+BLACK = (0, 0, 0)
 RED = (0, 0, 255)
 BLUE = (255, 0, 0)
 WHITE = (255, 255, 255)
@@ -22,6 +29,10 @@ mp_hands = mp.solutions.hands
 
 # list of finger tips locators, 4 is thumb, 20 is pinky finger
 TIPIDS = [4, 8, 12, 16, 20]
+
+# Calculates the distance between 2 point in a landmark
+def distance(p1, p2):
+  return np.sqrt(((p2.x - p1.x)**2) + ((p2.y - p1.y)**2))
 
 # Checks if finger is up or not
 def isFingerUp(landmark, label, tip):
@@ -136,9 +147,8 @@ def detectOkSign(landmark, label):
     for i in range(2, 5):
       if not isFingerUp(landmark, label, TIPIDS[i]):
         return False
-    distance = np.sqrt((landmark[TIPIDS[1]].x - landmark[TIPIDS[0]].x)
-                       ** 2 + (landmark[TIPIDS[1]].y - landmark[TIPIDS[0]].y)**2)
-    if distance > MARGIN_OF_ERROR:
+    d = distance(landmark[TIPIDS[0]], landmark[TIPIDS[1]])
+    if d > MARGIN_OF_ERROR:
       return False
   else:
     return False
@@ -229,6 +239,37 @@ with mp_hands.Hands(model_complexity=0, min_detection_confidence=0.5, min_tracki
                         (int(0.975 * width), int(0.975 * height)), WHITE, -1)
           cv2.putText(frame, detectGestures(landmark, label), (int(0.225 * width), int(0.925 * height)),
                       FONT, 1.5, BLUE, 5)
+
+        # Detect Movement
+        if not prev_thumb_pos:
+          prev_thumb_pos  = landmark[TIPIDS[0]]
+          prev_index_pos  = landmark[TIPIDS[1]]
+          prev_middle_pos = landmark[TIPIDS[2]]
+          prev_ring_pos   = landmark[TIPIDS[3]]
+          prev_pinky_pos  = landmark[TIPIDS[4]]
+
+        d0 = distance(prev_thumb_pos, landmark[TIPIDS[0]])
+        d1 = distance(prev_index_pos, landmark[TIPIDS[1]])
+        d2 = distance(prev_middle_pos, landmark[TIPIDS[2]])
+        d3 = distance(prev_ring_pos, landmark[TIPIDS[3]])
+        d4 = distance(prev_pinky_pos, landmark[TIPIDS[4]])
+
+        if (d0 + d1 + d2 + d3 + d4) > MOVEMENT_MARGIN:
+          moving = True
+        else:
+          moving = False
+
+        prev_thumb_pos  = landmark[TIPIDS[0]]
+        prev_index_pos  = landmark[TIPIDS[1]]
+        prev_middle_pos = landmark[TIPIDS[2]]
+        prev_ring_pos   = landmark[TIPIDS[3]]
+        prev_pinky_pos  = landmark[TIPIDS[4]]
+
+        if moving:
+          cv2.rectangle(frame, (int(0.025 * width), int(0.025 * height)),
+                        (int(0.45 * width), int(0.14 * height)), BLACK, -1)
+          cv2.putText(frame, "Moving Hand...", (int(0.04 * width), int(0.1 * height)),
+                      FONT, 1, WHITE, 2)
 
       # Display fingers counted
       text = str(finger_count).zfill(2)
