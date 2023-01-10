@@ -12,7 +12,7 @@ MARGIN_OF_ERROR = 0.05
 MOVEMENT_MARGIN = 0.025
 
 # Flags to detect Hand movement
-moving = prev_thumb_pos = prev_index_pos = prev_middle_pos = prev_ring_pos = prev_pinky_pos = False
+moving = prev_thumb = prev_index = prev_middle = prev_ring = prev_pinky = False
 
 # Colors used
 BLACK = (0, 0, 0)
@@ -184,6 +184,35 @@ def detectGestures(landmark, label):
     return "Loser >:D"
   return False
 
+# Detects Hand Movements calculating the distance in a margin between the positions
+# of 2 instances through time of the hand
+def detectMovement(landmark):
+  global moving, prev_thumb, prev_index, prev_middle, prev_ring, prev_pinky
+  if not prev_thumb:
+    prev_thumb  = landmark[TIPIDS[0]]
+    prev_index  = landmark[TIPIDS[1]]
+    prev_middle = landmark[TIPIDS[2]]
+    prev_ring   = landmark[TIPIDS[3]]
+    prev_pinky  = landmark[TIPIDS[4]]
+
+  d0 = distance(prev_thumb, landmark[TIPIDS[0]])
+  d1 = distance(prev_index, landmark[TIPIDS[1]])
+  d2 = distance(prev_middle, landmark[TIPIDS[2]])
+  d3 = distance(prev_ring, landmark[TIPIDS[3]])
+  d4 = distance(prev_pinky, landmark[TIPIDS[4]])
+
+  if (d0 + d1 + d2 + d3 + d4) > MOVEMENT_MARGIN:
+    moving = True
+  else:
+    moving = False
+
+  prev_thumb  = landmark[TIPIDS[0]]
+  prev_index  = landmark[TIPIDS[1]]
+  prev_middle = landmark[TIPIDS[2]]
+  prev_ring   = landmark[TIPIDS[3]]
+  prev_pinky  = landmark[TIPIDS[4]]
+
+  return moving
 
 # Starts the WebCam Capture
 capture = cv2.VideoCapture(0)
@@ -241,31 +270,7 @@ with mp_hands.Hands(model_complexity=0, min_detection_confidence=0.5, min_tracki
                       FONT, 1.5, BLUE, 5)
 
         # Detect Movement
-        if not prev_thumb_pos:
-          prev_thumb_pos  = landmark[TIPIDS[0]]
-          prev_index_pos  = landmark[TIPIDS[1]]
-          prev_middle_pos = landmark[TIPIDS[2]]
-          prev_ring_pos   = landmark[TIPIDS[3]]
-          prev_pinky_pos  = landmark[TIPIDS[4]]
-
-        d0 = distance(prev_thumb_pos, landmark[TIPIDS[0]])
-        d1 = distance(prev_index_pos, landmark[TIPIDS[1]])
-        d2 = distance(prev_middle_pos, landmark[TIPIDS[2]])
-        d3 = distance(prev_ring_pos, landmark[TIPIDS[3]])
-        d4 = distance(prev_pinky_pos, landmark[TIPIDS[4]])
-
-        if (d0 + d1 + d2 + d3 + d4) > MOVEMENT_MARGIN:
-          moving = True
-        else:
-          moving = False
-
-        prev_thumb_pos  = landmark[TIPIDS[0]]
-        prev_index_pos  = landmark[TIPIDS[1]]
-        prev_middle_pos = landmark[TIPIDS[2]]
-        prev_ring_pos   = landmark[TIPIDS[3]]
-        prev_pinky_pos  = landmark[TIPIDS[4]]
-
-        if moving:
+        if detectMovement(landmark):
           cv2.rectangle(frame, (int(0.025 * width), int(0.025 * height)),
                         (int(0.45 * width), int(0.14 * height)), BLACK, -1)
           cv2.putText(frame, "Moving Hand...", (int(0.04 * width), int(0.1 * height)),
