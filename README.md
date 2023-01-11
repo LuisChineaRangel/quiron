@@ -5,9 +5,10 @@
 
 ---
 
+
 ## Introduction 📋
 
-Handy Hands is a funny tool written in Python to experience and play with hand recognition. It can be used for research and studies or just for fun!
+Handy Hands is a funny tool written in Python to experience and play with hand recognition. Created with <a href="https://mediapipe.dev/">Google's Framework Mediapipe</a>, it can be used for research and studies or just for fun!
 
 ## Features ✨
 

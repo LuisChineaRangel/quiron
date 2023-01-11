@@ -34,6 +34,15 @@ TIPIDS = [4, 8, 12, 16, 20]
 def distance(p1, p2):
   return np.sqrt(((p2.x - p1.x)**2) + ((p2.y - p1.y)**2))
 
+# Check if hand is sideways (Horizontal Aligned)
+def isHandSideways(landmark, label):
+  wrist = landmark[0]
+  thumb_cmc = landmark[1]
+  pinky_mcp = landmark[17]
+  if thumb_cmc.y > wrist.y or thumb_cmc.y < pinky_mcp.y:
+    return True
+  return False
+
 # Checks if finger is up or not
 def isFingerUp(landmark, label, tip):
   # Vertical Aligned Hand Case
@@ -60,15 +69,6 @@ def isFingerUp(landmark, label, tip):
       return landmark[tip].y > landmark[tip - 1].y
     # For rest of fingers, make the comparison between tip and pip
     return (label == "Left" and landmark[tip].x > landmark[tip - 2].x) or (label == "Right" and landmark[tip].x < landmark[tip - 2].x)
-  return False
-
-# Check if hand is sideways (Horizontal Aligned)
-def isHandSideways(landmark, label):
-  wrist = landmark[0]
-  thumb_cmc = landmark[1]
-  pinky_mcp = landmark[17]
-  if thumb_cmc.y > wrist.y or thumb_cmc.y < pinky_mcp.y:
-    return True
   return False
 
 # Counts fingers up in a hand
