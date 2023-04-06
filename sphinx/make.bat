@@ -25,6 +25,7 @@ if errorlevel 9009 (
 
 if "%1" == "" goto help
 
+type nul > ..\docs\.nojekyll
 copy ..\README.md .\INTRO.md
 del .\LICENSE.md
 echo # License > .\LICENSE.md
