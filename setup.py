@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='quiron',
-    version='1.0.0',
+    version='1.1.0',
     description='A Python package for Hands Recognition using Mediapipe',
     author='iluzioDev',
     author_email='luischinearangel@gmail.com',
