@@ -1,4 +1,4 @@
-# Handy Hands
+# Quiron
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Twitter](https://img.shields.io/twitter/follow/luctstt.svg?label=Follow&style=social)](https://twitter.com/iluzioDev)
@@ -7,40 +7,50 @@
 
 <video width="100%" controls="controls" src="https://user-images.githubusercontent.com/45295283/211917624-f9b2433e-9d37-4c20-97c5-2fb3fb93b326.mp4">Your browser does not support the HTML5 Video element.</video>
 
+## Introduction
 
+Quiron is a Python package that provides hand detection, gesture recognition, and finger counting, so developers can easily integrate hand tracking and gesture recognition functionality into their applications, allowing for more natural and intuitive user interactions.
 
-## Introduction 📋
+Quiron leverages the powerful [Mediapipe framework](https://mediapipe.dev/), which uses machine learning models to accurately detect hands in images and video streams. Once hands are detected, Quiron provides a range of functionalities for recognizing different gestures, such as thumbs up or peace sign, as well as counting the number of fingers that are raised.
 
-Handy Hands is a funny tool written in Python to experience and play with hand recognition. Created with <a href="https://mediapipe.dev/">Google's Framework Mediapipe</a>, it can be used for research and studies or just for fun!
+## Features
 
-## Features ✨
+- Hand Recognition
+- Hand Movement Detection
+- Hand Gesture Recognition
+- Finger Counting
 
-* Multi-Hand Recognition.
-* Gestures Scanning.
-* Movement Detection.
-* Support for Windows and UNIX.
+## Installation
 
-## Install 🔧
-
-<u>Windows:</u>
-```
-git clone https://github.com/iluzioDev/handy-hands-python
-cd handy-hands-python
-python.exe src/main.py
+```console
+pip install quiron
 ```
 
-<u>UNIX:</u>
+## API
+
+### Hand Recognition
+
+```{eval-rst}
+.. autofunction:: quiron.count_fingers
 ```
-git clone https://github.com/iluzioDev/handy-hands-python
-cd handy-hands-python
-python src/main.py
+
+```{eval-rst}
+.. autofunction:: quiron.detect_gestures
 ```
 
-## Usage 💡
+```{eval-rst}
+.. autofunction:: quiron.gestures.distance
+```
 
-Handy Hands will detect via WebCam any hands in range, displaying info like number of fingers up, hand movement and diverse predefined gestures.
+```{eval-rst}
+.. autofunction:: quiron.gestures.raised
+```
 
-## Maintainers 👷
+```{eval-rst}
+.. autofunction:: quiron.gestures.sideways
+```
+
+## Maintainers
 
 <table>
   <tr>
@@ -53,6 +63,7 @@ Handy Hands will detect via WebCam any hands in range, displaying info like numb
 Distributed under the MIT License. [Click here](LICENSE.md) for more information.
 
 ---
+
 <div align="center">
 	<b>
 		<a href="https://www.npmjs.com/package/get-good-readme">File generated with get-good-readme module</a>
