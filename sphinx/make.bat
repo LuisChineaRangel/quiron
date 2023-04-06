@@ -25,6 +25,11 @@ if errorlevel 9009 (
 
 if "%1" == "" goto help
 
+copy ..\README.md .\INTRO.md
+del .\LICENSE.md
+echo # License > .\LICENSE.md
+echo. >> .\LICENSE.md
+type ..\LICENSE.md >> .\LICENSE.md
 %SPHINXBUILD% -b %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 goto end
 
